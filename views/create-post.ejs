@@ -1,0 +1,477 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Create New Post - AI Post Generator</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        primary: '#3B82F6',
+                        secondary: '#1E40AF',
+                        accent: '#F59E0B'
+                    }
+                }
+            }
+        }
+    </script>
+</head>
+<body class="bg-gray-50">
+    <!-- Include the reusable navbar component -->
+    <%- include('partials/navbar') %>
+
+    <div class="container mx-auto px-4 py-8">
+        <!-- Back to Dashboard Button -->
+        <div class="mb-6">
+            <a href="/profile" class="inline-flex items-center px-4 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-lg transition-colors duration-200">
+                <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path>
+                </svg>
+                Back to Dashboard
+            </a>
+        </div>
+
+        <!-- Header -->
+        <div class="text-center mb-8">
+            <h1 class="text-4xl font-bold text-gray-800 mb-4">Create New Post</h1>
+            <p class="text-gray-600 max-w-2xl mx-auto">
+                Generate stunning hotel social media posts with AI-powered text and images. Fill in the details below and let our AI create amazing content for you.
+            </p>
+        </div>
+
+        <!-- Main Form Card -->
+        <div class="max-w-2xl mx-auto bg-white rounded-2xl shadow-xl p-8 mb-8">
+            <form class="space-y-6">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                        <label for="hotelName" class="block text-sm font-medium text-gray-700 mb-2">
+                            Hotel Name
+                        </label>
+                        <input 
+                            type="text" 
+                            id="hotelName"
+                            name="hotelName" 
+                            placeholder="Enter hotel name..." 
+                            required
+                            class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent transition duration-200"
+                        >
+                    </div>
+
+                    <div>
+                        <label for="event" class="block text-sm font-medium text-gray-700 mb-2">
+                            Event/Occasion Details
+                        </label>
+                        <input 
+                            type="text" 
+                            id="event"
+                            name="event" 
+                            placeholder="Describe the event or occasion..." 
+                            required
+                            class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent transition duration-200"
+                        >
+                    </div>
+                </div>
+
+                <div>
+                    <label for="promptDetails" class="block text-sm font-medium text-gray-700 mb-2">
+                        Additional Prompt Details
+                    </label>
+                    <textarea 
+                        id="promptDetails"
+                        name="promptDetails" 
+                        placeholder="Specify tone, style, target audience, or any specific details to include..."
+                        rows="3"
+                        class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent transition duration-200 resize-none"
+                    ></textarea>
+                </div>
+
+                <div class="flex">
+                    <button 
+                        type="submit" 
+                        id="generateBtn"
+                        class="flex-1 bg-gradient-to-r from-primary to-secondary text-white font-semibold py-3 px-6 rounded-lg hover:from-secondary hover:to-primary transform hover:scale-105 transition duration-200 shadow-lg flex items-center justify-center"
+                    >
+                        <span id="generateBtnText">✨ Generate AI Social Media Posts</span>
+                        <svg id="generateBtnSpinner" class="hidden animate-spin ml-2 h-5 w-5 text-white" fill="none" viewBox="0 0 24 24">
+                            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                        </svg>
+                    </button>
+                    
+                </div>
+            </form>
+        </div>
+
+        <!-- Loading State -->
+        <div id="loading" class="hidden max-w-2xl mx-auto bg-white rounded-2xl shadow-xl p-8">
+            <div class="text-center">
+                <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4"></div>
+                <p class="text-lg text-gray-600">Generating your post...</p>
+                <p class="text-sm text-gray-500 mt-2">This may take a few moments</p>
+            </div>
+        </div>
+
+        <!-- Results Section -->
+        <div id="results" class="hidden max-w-6xl mx-auto">
+            <!-- Generated Posts Grid -->
+            <div class="bg-white rounded-2xl shadow-xl p-8 mb-8">
+                <div class="flex items-center justify-between mb-6">
+                    <h3 class="text-2xl font-bold text-gray-800 flex items-center">
+                        <svg class="w-6 h-6 mr-2 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+                        </svg>
+                        Generated Posts
+                    </h3>
+                </div>
+                <div id="postsGrid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                    <!-- Posts will be dynamically inserted here -->
+                </div>
+            </div>
+
+            <!-- Generated Images Section -->
+            <div class="bg-white rounded-2xl shadow-xl p-8">
+                
+                <div id="imagesGrid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                    <!-- Images will be dynamically inserted here -->
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- JavaScript for loading state and results -->
+    <script>
+        // Show loading state when form is submitted
+        document.querySelector('form').addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            // Validate inputs
+            const hotelName = document.getElementById('hotelName').value;
+            const event = document.getElementById('event').value;
+            const promptDetails = document.getElementById('promptDetails').value;
+            
+            if (!hotelName || !event) {
+                alert('Please fill in hotel name and event details');
+                return;
+            }
+            
+            // Show loading states
+            document.getElementById('loading').classList.remove('hidden');
+            document.getElementById('loading').scrollIntoView({ behavior: 'smooth' });
+            
+            // Update button state
+            const generateBtn = document.getElementById('generateBtn');
+            const generateBtnText = document.getElementById('generateBtnText');
+            const generateBtnSpinner = document.getElementById('generateBtnSpinner');
+            
+            generateBtn.disabled = true;
+            generateBtnText.textContent = 'Generating Posts & Images...';
+            generateBtnSpinner.classList.remove('hidden');
+            
+            // Hide results if they exist
+            document.getElementById('results').classList.add('hidden');
+            
+            // Get form data
+            const formData = new URLSearchParams();
+            formData.append('hotelName', hotelName);
+            formData.append('event', event);
+            formData.append('promptDetails', promptDetails);
+            
+            console.log('Sending data:', {
+                hotelName: hotelName,
+                event: event,
+                promptDetails: promptDetails
+            }); // Debug log
+            
+            // Submit form data as URL-encoded
+            fetch('/posts/generate', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded',
+                },
+                body: formData
+            })
+            .then(response => {
+                console.log('Response status:', response.status);
+                console.log('Response headers:', response.headers);
+                
+                if (!response.ok) {
+                    // Check if it's a quota exceeded error
+                    if (response.status === 429) {
+                        return response.json().then(data => {
+                            throw new Error(data.error || 'Quota exceeded');
+                        });
+                    }
+                    // For other errors, try to get JSON response
+                    return response.json().then(data => {
+                        throw new Error(data.error || `HTTP error! status: ${response.status}`);
+                    }).catch(() => {
+                        throw new Error(`HTTP error! status: ${response.status}`);
+                    });
+                }
+                
+                return response.json();
+            })
+            .then(data => {
+                console.log('✅ Response data received:', data);
+                
+                // Hide loading
+                document.getElementById('loading').classList.add('hidden');
+                
+                // Reset button state
+                generateBtn.disabled = false;
+                generateBtnText.textContent = '✨ Generate AI Social Media Posts';
+                generateBtnSpinner.classList.add('hidden');
+                
+                if (data.error) {
+                    console.error('❌ Error in response:', data.error);
+                    alert('Error: ' + data.error);
+                    return;
+                }
+                
+                if (data.success && data.posts) {
+                    console.log('✅ Posts generated successfully:', data.posts);
+                    console.log('Number of posts:', data.posts.length);
+                    
+                    // Display the generated posts
+                    displayGeneratedPosts(data.posts);
+                    
+                    // Show results section
+                    document.getElementById('results').classList.remove('hidden');
+                    document.getElementById('results').scrollIntoView({ behavior: 'smooth' });
+                    
+                    console.log('✅ Posts displayed successfully');
+                } else {
+                    console.error('❌ Unexpected response format:', data);
+                    alert('Unexpected response format. Please try again.');
+                }
+            })
+            .catch(error => {
+                console.error('❌ Fetch error:', error);
+                console.error('Error details:', error.message);
+                document.getElementById('loading').classList.add('hidden');
+                
+                // Reset button state
+                generateBtn.disabled = false;
+                generateBtnText.textContent = '✨ Generate AI Social Media Posts';
+                generateBtnSpinner.classList.add('hidden');
+                
+                // Show specific error message for quota exceeded
+                if (error.message.includes('quota') || 
+                    error.message.includes('Quota exceeded') ||
+                    error.message.includes('exceeded')) {
+                    alert('Unfortunately, quota is exceeded. Please try again tomorrow or upgrade your Gemini API plan.');
+                } else {
+                    alert('An error occurred while generating the posts. Please try again.');
+                }
+            });
+        });
+
+        // Copy post text
+        document.addEventListener('click', function(e) {
+            if (e.target.closest('.copy-post-btn')) {
+                const button = e.target.closest('.copy-post-btn');
+                const postText = button.closest('.card, .bg-white').querySelector('.post-text').textContent;
+                navigator.clipboard.writeText(postText).then(() => {
+                    const originalHTML = button.innerHTML;
+                    button.innerHTML = '<svg class="w-4 h-4 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>';
+                    setTimeout(() => {
+                        button.innerHTML = originalHTML;
+                    }, 2000);
+                });
+            }
+        });
+
+        // Download image
+        document.addEventListener('click', function(e) {
+            if (e.target.closest('.download-image-btn')) {
+                const button = e.target.closest('.download-image-btn');
+                const image = button.closest('.card, .bg-white').querySelector('.post-image');
+                if (image && image.src && !image.src.includes('placeholder')) {
+                    const link = document.createElement('a');
+                    link.download = `hotel-post.png`;
+                    link.href = image.src;
+                    link.click();
+                } else {
+                    alert('No valid image available to download');
+                }
+            }
+        });
+
+        // Share post
+        document.addEventListener('click', function(e) {
+            if (e.target.closest('.share-post-btn')) {
+                const button = e.target.closest('.share-post-btn');
+                const card = button.closest('.card, .bg-white');
+                const hotelName = card.querySelector('.inline-block.bg-blue-100').textContent;
+                const eventName = card.querySelector('.inline-block.bg-green-100').textContent;
+                const postText = card.querySelector('.post-text').textContent;
+                const image = card.querySelector('.post-image');
+                const shareableText = `🏨 ${hotelName}\n🎉 ${eventName}\n\n${postText}`;
+                const shareData = {
+                    title: `${hotelName} - ${eventName}`,
+                    text: shareableText
+                };
+                if (navigator.share) {
+                    navigator.share(shareData).catch(() => showShareModal(image.src, shareableText));
+                } else {
+                    showShareModal(image.src, shareableText);
+                }
+            }
+        });
+
+        // Show share modal fallback
+        function showShareModal(imageUrl, text) {
+            const modal = document.createElement('div');
+            modal.className = 'fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50';
+            modal.innerHTML = `
+                <div class="relative top-20 mx-auto p-5 border w-96 shadow-lg rounded-md bg-white">
+                    <div class="flex items-center justify-between mb-4">
+                        <h3 class="text-lg font-medium text-gray-900">Share Post</h3>
+                        <button class="text-gray-400 hover:text-gray-600" onclick="this.closest('.fixed').remove()">
+                            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                            </svg>
+                        </button>
+                    </div>
+                    <img src="${imageUrl}" class="w-full h-40 object-cover rounded mb-3" alt="Share Image">
+                    <textarea class="w-full p-2 border rounded mb-3 text-sm" rows="3" readonly>${text}</textarea>
+                    <div class="flex gap-2">
+                        <button onclick="navigator.clipboard.writeText('${text.replace(/'/g, "\\'")}')" class="flex-1 bg-blue-500 text-white px-3 py-2 rounded hover:bg-blue-600">Copy Text</button>
+                        <button onclick="window.open('${imageUrl}', '_blank')" class="flex-1 bg-green-500 text-white px-3 py-2 rounded hover:bg-green-600">Open Image</button>
+                    </div>
+                </div>
+            `;
+            document.body.appendChild(modal);
+            modal.addEventListener('click', function(e) {
+                if (e.target === this) this.remove();
+            });
+        }
+
+        // Delete post (remove card from UI)
+        document.addEventListener('click', function(e) {
+            if (e.target.closest('.delete-post-btn')) {
+                const button = e.target.closest('.delete-post-btn');
+                if (confirm('Are you sure you want to delete this post?')) {
+                    const card = button.closest('.card, .bg-white');
+                    card.remove();
+                }
+            }
+        });
+
+        // Regenerate image functionality
+        document.addEventListener('click', function(e) {
+            if (e.target.closest('.regenerate-image-btn')) {
+                const button = e.target.closest('.regenerate-image-btn');
+                const postId = button.getAttribute('data-post');
+                regenerateImage(postId, button);
+            }
+        });
+
+        // Function to regenerate an image
+        function regenerateImage(postId, button) {
+            const originalText = button.innerHTML;
+            button.disabled = true;
+            button.innerHTML = '<svg class="w-4 h-4 animate-spin" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>';
+            
+            // Get current form data
+            const hotelName = document.getElementById('hotelName').value;
+            const event = document.getElementById('event').value;
+            const promptDetails = document.getElementById('promptDetails').value;
+            
+            const formData = new URLSearchParams();
+            formData.append('hotelName', hotelName);
+            formData.append('event', event);
+            formData.append('promptDetails', promptDetails);
+            formData.append('regenerateImage', 'true');
+            formData.append('postId', postId);
+            
+            fetch('/posts/regenerate-image', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded',
+                },
+                body: formData
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.error) {
+                    alert('Error: ' + data.error);
+                } else {
+                    const image = button.closest('.card').querySelector('.post-image');
+                    image.src = data.imageUrl;
+                }
+            })
+            .catch(error => {
+                console.error('Error regenerating image:', error);
+                alert('Failed to regenerate image. Please try again.');
+            })
+            .finally(() => {
+                button.disabled = false;
+                button.innerHTML = originalText;
+            });
+        }
+
+        // Function to display generated posts (add data-card-index)
+        function displayGeneratedPosts(posts) {
+            const postsGrid = document.getElementById('postsGrid');
+            postsGrid.innerHTML = '';
+            posts.forEach((post, index) => {
+                const postCard = createPostCard(post, index);
+                postCard.setAttribute('data-card-index', index);
+                postsGrid.appendChild(postCard);
+            });
+        }
+
+        // Function to create post card (add data-card-index to edit button)
+        function createPostCard(post, index) {
+            const card = document.createElement('div');
+            card.className = 'bg-white rounded-2xl shadow-lg border border-gray-100 overflow-hidden flex flex-col';
+            card.setAttribute('data-card-index', index);
+            card.innerHTML = `
+                <div class="relative">
+                    <img src="${post.imageUrl}" alt="Generated hotel post" class="post-image w-full h-56 object-cover">
+                    <button class="download-image-btn absolute top-3 right-3 bg-white bg-opacity-80 rounded-full p-2 shadow hover:bg-opacity-100 transition" data-post="${index}" title="Download Image">
+                        <svg class="w-5 h-5 text-gray-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+                        </svg>
+                    </button>
+                </div>
+                <div class="p-5 flex-1 flex flex-col">
+                    <div class="flex gap-2 mb-3">
+                        <span class="inline-block bg-blue-100 text-blue-700 text-xs font-semibold px-3 py-1 rounded-full">${post.hotelName}</span>
+                        <span class="inline-block bg-green-100 text-green-700 text-xs font-semibold px-3 py-1 rounded-full">${post.event}</span>
+                    </div>
+                    <div class="mb-4">
+                        <p class="text-gray-800 post-text text-base leading-relaxed">${post.postText}</p>
+                    </div>
+                    <div class="text-xs text-gray-500 mb-4">Created: ${new Date(post.createdAt).toLocaleDateString()}</div>
+                    <div class="flex gap-2 mt-auto">
+                        <button class="share-post-btn flex-1 bg-blue-100 text-blue-700 px-3 py-2 rounded-md hover:bg-blue-200 transition-colors duration-200 text-sm flex items-center justify-center" data-post-id="${post._id}" title="Share">
+                            <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.367 2.684 3 3 0 00-5.367-2.684z"></path>
+                            </svg>
+                            Share
+                        </button>
+                        <button class="copy-post-btn flex-1 bg-purple-100 text-purple-700 px-3 py-2 rounded-md hover:bg-purple-200 transition-colors duration-200 text-sm flex items-center justify-center" title="Copy Text">
+                            <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"></path>
+                            </svg>
+                            Copy
+                        </button>
+                        <button class="delete-post-btn flex-1 bg-red-100 text-red-700 px-3 py-2 rounded-md hover:bg-red-200 transition-colors duration-200 text-sm flex items-center justify-center" title="Delete">
+                            <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                            </svg>
+                            Delete
+                        </button>
+                    </div>
+                </div>
+            `;
+            return card;
+        }
+    </script>
+</body>
+</html> 

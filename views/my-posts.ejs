@@ -1,0 +1,735 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>My Posts - PostJini</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        primary: '#3B82F6',
+                        accent: '#F59E0B'
+                    }
+                }
+            }
+        }
+    </script>
+</head>
+<body class="bg-gray-50 min-h-screen">
+    <%- include('partials/navbar') %>
+
+    <div class="container mx-auto px-4 py-8">
+        <!-- Back to Dashboard Button -->
+        <div class="mb-6">
+            <a href="/profile" class="inline-flex items-center px-4 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-lg transition-colors duration-200">
+                <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path>
+                </svg>
+                Back to Dashboard
+            </a>
+        </div>
+
+        <!-- Header -->
+        <div class="text-center mb-8">
+            <h1 class="text-4xl font-bold text-gray-800 mb-4">My Generated Posts</h1>
+            <p class="text-gray-600 max-w-2xl mx-auto">
+                View and manage all your generated hotel social media posts. You can copy, download, edit, or delete any post.
+            </p>
+        </div>
+
+        <!-- Stats -->
+        <div class="bg-white rounded-2xl shadow-lg p-6 mb-8">
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                <div class="text-center">
+                    <div class="text-3xl font-bold text-primary" id="totalPosts">0</div>
+                    <div class="text-gray-600">Total Posts</div>
+                </div>
+                <div class="text-center">
+                    <div class="text-3xl font-bold text-accent" id="thisMonth">0</div>
+                    <div class="text-gray-600">This Month</div>
+                </div>
+                <div class="text-center">
+                    <div class="text-3xl font-bold text-green-600" id="totalHotels">0</div>
+                    <div class="text-gray-600">Hotels</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Filters -->
+        <div class="bg-white rounded-2xl shadow-lg p-6 mb-8">
+            <div class="flex flex-wrap gap-4 items-center">
+                <div class="flex-1 min-w-64">
+                    <input type="text" id="searchInput" placeholder="Search posts..." class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent">
+                </div>
+                <select id="hotelFilter" class="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent">
+                    <option value="">All Hotels</option>
+                </select>
+                <select id="eventFilter" class="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent">
+                    <option value="">All Events</option>
+                </select>
+                <button id="clearFilters" class="px-4 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-lg transition-colors duration-200">
+                    Clear Filters
+                </button>
+            </div>
+        </div>
+
+        <!-- Loading State -->
+        <div id="loading" class="text-center py-12">
+            <div class="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+            <p class="mt-4 text-gray-600">Loading your posts...</p>
+        </div>
+
+        <!-- Posts Grid -->
+        <div id="postsContainer" class="hidden">
+            <div id="postsGrid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                <!-- Posts will be dynamically inserted here -->
+            </div>
+        </div>
+
+        <!-- Empty State -->
+        <div id="emptyState" class="hidden text-center py-12">
+            <svg class="mx-auto h-12 w-12 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+            </svg>
+            <h3 class="mt-2 text-sm font-medium text-gray-900">No posts found</h3>
+            <p class="mt-1 text-sm text-gray-500">Get started by creating your first post.</p>
+            <div class="mt-6">
+                <a href="/create-post" class="inline-flex items-center px-4 py-2 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-primary hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary">
+                    Create New Post
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Edit Post Modal -->
+    <div id="editModal" class="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full hidden z-50">
+        <div class="relative top-20 mx-auto p-5 border w-96 shadow-lg rounded-md bg-white">
+            <div class="mt-3">
+                <div class="flex items-center justify-between mb-4">
+                    <h3 class="text-lg font-medium text-gray-900">Edit Post</h3>
+                    <button id="closeEditModal" class="text-gray-400 hover:text-gray-600">
+                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                        </svg>
+                    </button>
+                </div>
+                
+                <form id="editForm">
+                    <input type="hidden" id="editPostId">
+                    
+                    <div class="mb-4">
+                        <label for="editHotelName" class="block text-sm font-medium text-gray-700 mb-2">Hotel Name</label>
+                        <input type="text" id="editHotelName" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent">
+                    </div>
+                    
+                    <div class="mb-4">
+                        <label for="editEvent" class="block text-sm font-medium text-gray-700 mb-2">Event/Occasion</label>
+                        <input type="text" id="editEvent" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent">
+                    </div>
+                    
+                    <div class="mb-6">
+                        <label for="editPostText" class="block text-sm font-medium text-gray-700 mb-2">Post Text</label>
+                        <textarea id="editPostText" rows="4" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent resize-none"></textarea>
+                    </div>
+                    
+                    <div class="flex justify-end space-x-3">
+                        <button type="button" id="cancelEdit" class="px-4 py-2 bg-gray-300 text-gray-700 rounded-md hover:bg-gray-400 transition-colors duration-200">
+                            Cancel
+                        </button>
+                        <button type="submit" id="saveEdit" class="px-4 py-2 bg-primary text-white rounded-md hover:bg-blue-700 transition-colors duration-200">
+                            Save Changes
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let allPosts = [];
+        let filteredPosts = [];
+
+        // Load posts on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            loadPosts();
+        });
+
+        // Load posts from server
+        async function loadPosts() {
+            try {
+                const response = await fetch('/posts/my-posts');
+                const data = await response.json();
+                
+                if (response.ok) {
+                    allPosts = data.posts;
+                    filteredPosts = [...allPosts];
+                    const totalPostsGenerated = data.totalPostsGenerated || 0;
+                    const monthlyPostsGenerated = data.monthlyPostsGenerated || 0;
+                    updateStats(totalPostsGenerated, monthlyPostsGenerated);
+                    updateFilters();
+                    renderPosts();
+                } else {
+                    console.error('Error loading posts:', data.error);
+                    showEmptyState();
+                }
+            } catch (error) {
+                console.error('Error loading posts:', error);
+                showEmptyState();
+            }
+        }
+
+        // Update statistics
+        function updateStats(totalPostsGenerated = null, monthlyPostsGenerated = null) {
+            const totalPosts = totalPostsGenerated !== null ? totalPostsGenerated : allPosts.length;
+            document.getElementById('totalPosts').textContent = totalPosts;
+            
+            let thisMonth;
+            if (monthlyPostsGenerated !== null) {
+                thisMonth = monthlyPostsGenerated;
+            } else {
+                thisMonth = allPosts.filter(post => {
+                    const postDate = new Date(post.createdAt);
+                    const now = new Date();
+                    return postDate.getMonth() === now.getMonth() && postDate.getFullYear() === now.getFullYear();
+                }).length;
+            }
+            document.getElementById('thisMonth').textContent = thisMonth;
+            
+            const uniqueHotels = new Set(allPosts.map(post => post.hotelName)).size;
+            document.getElementById('totalHotels').textContent = uniqueHotels;
+        }
+
+        // Update filter options
+        function updateFilters() {
+            const hotels = [...new Set(allPosts.map(post => post.hotelName))];
+            const events = [...new Set(allPosts.map(post => post.event))];
+            
+            const hotelFilter = document.getElementById('hotelFilter');
+            const eventFilter = document.getElementById('eventFilter');
+            
+            // Clear existing options except first
+            hotelFilter.innerHTML = '<option value="">All Hotels</option>';
+            eventFilter.innerHTML = '<option value="">All Events</option>';
+            
+            hotels.forEach(hotel => {
+                const option = document.createElement('option');
+                option.value = hotel;
+                option.textContent = hotel;
+                hotelFilter.appendChild(option);
+            });
+            
+            events.forEach(event => {
+                const option = document.createElement('option');
+                option.value = event;
+                option.textContent = event;
+                eventFilter.appendChild(option);
+            });
+        }
+
+        // Render posts
+        function renderPosts() {
+            const postsGrid = document.getElementById('postsGrid');
+            const loading = document.getElementById('loading');
+            const postsContainer = document.getElementById('postsContainer');
+            const emptyState = document.getElementById('emptyState');
+            
+            loading.classList.add('hidden');
+            
+            if (filteredPosts.length === 0) {
+                postsContainer.classList.add('hidden');
+                emptyState.classList.remove('hidden');
+                return;
+            }
+            
+            emptyState.classList.add('hidden');
+            postsContainer.classList.remove('hidden');
+            
+            postsGrid.innerHTML = filteredPosts.map((post, index) => `
+                <div class="card bg-white shadow-lg flex flex-col rounded-lg overflow-hidden border border-gray-200 hover:shadow-xl transition-shadow duration-300" data-post-id="${post._id}">
+                    <div class="relative">
+                        <img src="${post.imageUrl}" alt="Generated image" class="post-image w-full h-48 object-cover">
+                        <div class="absolute top-2 right-2">
+                            <button class="download-image-btn bg-white bg-opacity-80 hover:bg-opacity-100 text-gray-800 p-2 rounded-full transition-all duration-200 shadow-sm" data-post-id="${post._id}">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+                                </svg>
+                            </button>
+                        </div>
+                    </div>
+                    <div class="p-4 flex-1">
+                        <div class="mb-2">
+                            <span class="inline-block bg-blue-100 text-blue-800 text-xs px-2 py-1 rounded-full mr-2">${post.hotelName}</span>
+                            <span class="inline-block bg-green-100 text-green-800 text-xs px-2 py-1 rounded-full">${post.event}</span>
+                        </div>
+                        <p class="post-text text-gray-700 leading-relaxed mb-4 text-sm">${post.postText}</p>
+                        <div class="text-xs text-gray-500 mb-3">
+                            Created: ${new Date(post.createdAt).toLocaleDateString()}
+                        </div>
+                        <div class="flex flex-wrap justify-end gap-2">
+                            <button class="edit-post-btn bg-gray-100 hover:bg-gray-200 text-gray-700 px-3 py-1 rounded text-xs transition-colors duration-200" data-post-id="${post._id}">
+                                Edit
+                            </button>
+                            <button class="share-post-btn bg-blue-100 hover:bg-blue-200 text-blue-700 px-3 py-1 rounded text-xs transition-colors duration-200" data-post-id="${post._id}">
+                                Share
+                            </button>
+                            <button class="copy-post-btn text-blue-600 hover:text-blue-800 p-1 rounded transition-colors duration-200" data-post-id="${post._id}">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"></path>
+                                </svg>
+                            </button>
+                            <button class="delete-post-btn text-red-600 hover:text-red-800 p-1 rounded transition-colors duration-200" data-post-id="${post._id}">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
+                                </svg>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        // Show empty state
+        function showEmptyState() {
+            document.getElementById('loading').classList.add('hidden');
+            document.getElementById('postsContainer').classList.add('hidden');
+            document.getElementById('emptyState').classList.remove('hidden');
+        }
+
+        // Filter posts
+        function filterPosts() {
+            const searchTerm = document.getElementById('searchInput').value.toLowerCase();
+            const hotelFilter = document.getElementById('hotelFilter').value;
+            const eventFilter = document.getElementById('eventFilter').value;
+            
+            filteredPosts = allPosts.filter(post => {
+                const matchesSearch = post.postText.toLowerCase().includes(searchTerm) || 
+                                    post.hotelName.toLowerCase().includes(searchTerm) ||
+                                    post.event.toLowerCase().includes(searchTerm);
+                const matchesHotel = !hotelFilter || post.hotelName === hotelFilter;
+                const matchesEvent = !eventFilter || post.event === eventFilter;
+                
+                return matchesSearch && matchesHotel && matchesEvent;
+            });
+            
+            renderPosts();
+        }
+
+        // Event listeners
+        document.getElementById('searchInput').addEventListener('input', filterPosts);
+        document.getElementById('hotelFilter').addEventListener('change', filterPosts);
+        document.getElementById('eventFilter').addEventListener('change', filterPosts);
+        
+        document.getElementById('clearFilters').addEventListener('click', function() {
+            document.getElementById('searchInput').value = '';
+            document.getElementById('hotelFilter').value = '';
+            document.getElementById('eventFilter').value = '';
+            filteredPosts = [...allPosts];
+            renderPosts();
+        });
+
+        // Individual post copy functionality
+        document.addEventListener('click', function(e) {
+            if (e.target.closest('.copy-post-btn')) {
+                const button = e.target.closest('.copy-post-btn');
+                const postText = button.closest('.card').querySelector('.post-text').textContent;
+                
+                navigator.clipboard.writeText(postText).then(() => {
+                    const originalHTML = button.innerHTML;
+                    button.innerHTML = '<svg class="w-4 h-4 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>';
+                    setTimeout(() => {
+                        button.innerHTML = originalHTML;
+                    }, 2000);
+                });
+            }
+        });
+
+        // Share post functionality
+        document.addEventListener('click', function(e) {
+            if (e.target.closest('.share-post-btn')) {
+                const button = e.target.closest('.share-post-btn');
+                const postId = button.getAttribute('data-post-id');
+                const post = allPosts.find(p => p._id === postId);
+                
+                if (post) {
+                    sharePost(post, button);
+                }
+            }
+        });
+
+        // Share post function
+        async function sharePost(post, button) {
+            // Check if we have Cloudinary URL for better sharing
+            const imageUrl = post.cloudinary && post.cloudinary.url ? post.cloudinary.url : post.imageUrl;
+            const isCloudinaryUrl = post.cloudinary && post.cloudinary.url;
+            
+            // Debug info
+            console.log('Post sharing debug:', {
+                postId: post._id,
+                hotelName: post.hotelName,
+                hasCloudinary: !!post.cloudinary,
+                cloudinaryUrl: post.cloudinary?.url,
+                isBase64: post.imageUrl?.startsWith('data:image/'),
+                isCloudinaryUrl: isCloudinaryUrl
+            });
+            
+            // Create shareable content
+            const shareableText = `🏨 ${post.hotelName}\n🎉 ${post.event}\n\n${post.postText}`;
+            
+            const shareData = {
+                title: `${post.hotelName} - ${post.event}`,
+                text: shareableText,
+                url: isCloudinaryUrl ? imageUrl : undefined // Only include URL if it's a Cloudinary URL
+            };
+
+            try {
+                // Try to use Web Share API if available
+                if (navigator.share) {
+                    await navigator.share(shareData);
+                    showNotification('Post shared successfully!', 'success');
+                } else {
+                    // Fallback: show image sharing options
+                    showImageShareOptions(post, shareableText, isCloudinaryUrl);
+                }
+            } catch (error) {
+                console.error('Error sharing post:', error);
+                // Fallback: show image sharing options
+                showImageShareOptions(post, shareableText, isCloudinaryUrl);
+            }
+        }
+
+        // Show image share options modal
+        function showImageShareOptions(post, shareableText, isCloudinaryUrl) {
+            const imageUrl = post.cloudinary && post.cloudinary.url ? post.cloudinary.url : post.imageUrl;
+            const encodedText = encodeURIComponent(shareableText);
+            const encodedImageUrl = encodeURIComponent(imageUrl);
+            const modal = document.createElement('div');
+            modal.className = 'fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50';
+            modal.innerHTML = `
+                <div class="relative top-20 mx-auto p-5 border w-96 shadow-lg rounded-md bg-white">
+                    <div class="mt-3">
+                        <div class="flex items-center justify-between mb-4">
+                            <h3 class="text-lg font-medium text-gray-900">Share Image</h3>
+                            <button class="text-gray-400 hover:text-gray-600" onclick="this.closest('.fixed').remove()">
+                                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                                </svg>
+                            </button>
+                        </div>
+                        <div class="mb-4">
+                            <div class="bg-gray-100 p-3 rounded text-sm text-gray-700 mb-3">
+                                <strong>${post.hotelName}</strong> - ${post.event}
+                            </div>
+                        </div>
+                        <div class="mb-4 p-3 bg-blue-50 rounded-lg">
+                            <h4 class="font-medium text-blue-900 mb-2">📸 Share Image Directly</h4>
+                            <p class="text-sm text-blue-700 mb-3">Choose how you want to share the image:</p>
+                        </div>
+                        <div class="flex flex-col space-y-2 mb-4">
+                            <button onclick="window.open('https://wa.me/?text=${encodedText}%20${encodedImageUrl}', '_blank')" class="flex items-center justify-center px-4 py-2 bg-green-500 text-white rounded-md hover:bg-green-600 transition-colors duration-200">
+                                <svg class="w-4 h-4 mr-2" fill="currentColor" viewBox="0 0 24 24"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.031-.967-.273-.099-.471-.148-.67.15-.198.297-.767.966-.94 1.164-.173.198-.347.223-.644.075-.297-.149-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.372-.025-.521-.075-.149-.669-1.611-.916-2.206-.242-.579-.487-.5-.669-.51-.173-.007-.372-.009-.571-.009-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.099 3.2 5.077 4.363.71.306 1.262.489 1.694.626.712.227 1.36.195 1.872.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.288.173-1.413-.074-.124-.272-.198-.57-.347z"/></svg>
+                                Share on WhatsApp
+                            </button>
+                            <button onclick="window.open('https://www.facebook.com/sharer/sharer.php?u=${encodedImageUrl}', '_blank')" class="flex items-center justify-center px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors duration-200">
+                                <svg class="w-4 h-4 mr-2" fill="currentColor" viewBox="0 0 24 24"><path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/></svg>
+                                Share on Facebook
+                            </button>
+                            <button onclick="window.open('https://twitter.com/intent/tweet?text=${encodedText}&url=${encodedImageUrl}', '_blank')" class="flex items-center justify-center px-4 py-2 bg-blue-400 text-white rounded-md hover:bg-blue-500 transition-colors duration-200">
+                                <svg class="w-4 h-4 mr-2" fill="currentColor" viewBox="0 0 24 24"><path d="M23.954 4.569c-.885.389-1.83.654-2.825.775 1.014-.611 1.794-1.574 2.163-2.724-.951.555-2.005.959-3.127 1.184-.897-.959-2.178-1.555-3.594-1.555-2.717 0-4.924 2.206-4.924 4.917 0 .39.045.765.127 1.124-4.09-.205-7.719-2.165-10.148-5.144-.424.722-.666 1.561-.666 2.475 0 1.708.87 3.213 2.188 4.096-.807-.026-1.566-.248-2.229-.616v.061c0 2.385 1.693 4.374 3.946 4.827-.413.111-.849.171-1.296.171-.314 0-.615-.03-.916-.086.631 1.953 2.445 3.377 4.604 3.417-1.68 1.319-3.809 2.105-6.102 2.105-.39 0-.779-.023-1.17-.067 2.189 1.394 4.768 2.209 7.557 2.209 9.054 0 14-7.496 14-13.986 0-.21 0-.423-.016-.634.962-.689 1.8-1.56 2.46-2.548l-.047-.02z"/></svg>
+                                Share on Twitter
+                            </button>
+                            <button onclick="window.open('https://www.linkedin.com/sharing/share-offsite/?url=${encodedImageUrl}', '_blank')" class="flex items-center justify-center px-4 py-2 bg-blue-800 text-white rounded-md hover:bg-blue-900 transition-colors duration-200">
+                                <svg class="w-4 h-4 mr-2" fill="currentColor" viewBox="0 0 24 24"><path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433c-1.144 0-2.063-.926-2.063-2.065 0-1.138.92-2.063 2.063-2.063 1.14 0 2.064.925 2.064 2.063 0 1.139-.925 2.065-2.064 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z"/></svg>
+                                Share on LinkedIn
+                            </button>
+                        </div>
+                        <div class="flex flex-col space-y-2">
+                            ${isCloudinaryUrl ? `
+                                <button onclick="copyImageLink('${imageUrl}')" class="flex items-center justify-center px-4 py-2 bg-green-500 text-white rounded-md hover:bg-green-600 transition-colors duration-200">
+                                    <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1"></path>
+                                    </svg>
+                                    Copy Image Link
+                                </button>
+                            ` : ''}
+                            <button onclick="openImageInNewTab('${imageUrl}')" class="flex items-center justify-center px-4 py-2 bg-green-500 text-white rounded-md hover:bg-green-600 transition-colors duration-200">
+                                <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"></path>
+                                </svg>
+                                Open Image in New Tab
+                            </button>
+                            <button onclick="downloadImageForSharing('${imageUrl}', '${post.hotelName}-${post.event}')" class="flex items-center justify-center px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600 transition-colors duration-200">
+                                <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+                                </svg>
+                                Download Image
+                            </button>
+                            <button onclick="copyImageToClipboard('${imageUrl}')" class="flex items-center justify-center px-4 py-2 bg-purple-500 text-white rounded-md hover:bg-purple-600 transition-colors duration-200">
+                                <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"></path>
+                                </svg>
+                                Copy Image to Clipboard
+                            </button>
+                        </div>
+                        <div class="mt-4 p-3 bg-yellow-50 rounded-lg">
+                            <h4 class="font-medium text-yellow-900 mb-2">💡 Pro Tips</h4>
+                            <ul class="text-sm text-yellow-700 space-y-1">
+                                ${isCloudinaryUrl ? `
+                                    <li>• <strong>Social Media:</strong> Direct sharing with image links</li>
+                                    <li>• <strong>Copy Link:</strong> Share the direct image URL</li>
+                                ` : ''}
+                                <li>• <strong>Open in New Tab:</strong> Right-click the image to save or share</li>
+                                <li>• <strong>Copy to Clipboard:</strong> Paste directly into social media apps</li>
+                                <li>• <strong>Download:</strong> Save to your device for later sharing</li>
+                            </ul>
+                        </div>
+                        <div class="flex justify-end mt-4">
+                            <button onclick="this.closest('.fixed').remove()" class="px-4 py-2 bg-gray-300 text-gray-700 rounded-md hover:bg-gray-400 transition-colors duration-200">
+                                Close
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            `;
+            document.body.appendChild(modal);
+            modal.addEventListener('click', function(e) {
+                if (e.target === this) {
+                    this.remove();
+                }
+            });
+        }
+
+        // Share to social media with image URL
+        function shareToSocial(platform, text, imageUrl) {
+            const urls = {
+                twitter: `https://twitter.com/intent/tweet?text=${text}&url=${encodeURIComponent(imageUrl)}`,
+                facebook: `https://www.facebook.com/sharer/sharer.php?quote=${text}&u=${encodeURIComponent(imageUrl)}`,
+                linkedin: `https://www.linkedin.com/sharing/share-offsite/?title=${encodeURIComponent('Hotel Social Media Post')}&summary=${text}&url=${encodeURIComponent(imageUrl)}`
+            };
+            
+            if (urls[platform]) {
+                window.open(urls[platform], '_blank', 'width=600,height=400');
+                showNotification(`Opening ${platform} share dialog...`, 'success');
+            }
+        }
+
+        // Copy image link to clipboard
+        async function copyImageLink(imageUrl) {
+            try {
+                await navigator.clipboard.writeText(imageUrl);
+                showNotification('Image link copied to clipboard!', 'success');
+            } catch (error) {
+                console.error('Error copying image link:', error);
+                showNotification('Failed to copy image link', 'error');
+            }
+        }
+
+        // Open image in new tab
+        function openImageInNewTab(imageUrl) {
+            try {
+                window.open(imageUrl, '_blank');
+                showNotification('Image opened in new tab! Right-click to save or share.', 'success');
+            } catch (error) {
+                console.error('Error opening image:', error);
+                showNotification('Failed to open image', 'error');
+            }
+        }
+
+        // Copy image to clipboard
+        async function copyImageToClipboard(imageUrl) {
+            try {
+                const response = await fetch(imageUrl);
+                const blob = await response.blob();
+                
+                if (navigator.clipboard && navigator.clipboard.write) {
+                    const clipboardItem = new ClipboardItem({
+                        [blob.type]: blob
+                    });
+                    await navigator.clipboard.write([clipboardItem]);
+                    showNotification('Image copied to clipboard! You can now paste it anywhere.', 'success');
+                } else {
+                    showNotification('Clipboard API not supported. Try downloading the image instead.', 'info');
+                }
+            } catch (error) {
+                console.error('Error copying image:', error);
+                showNotification('Failed to copy image. Try downloading instead.', 'error');
+            }
+        }
+
+        // Download image for sharing
+        function downloadImageForSharing(imageUrl, filename) {
+            try {
+                const link = document.createElement('a');
+                link.download = `${filename}.png`;
+                link.href = imageUrl;
+                link.click();
+                showNotification('Image downloaded! You can now add it to your social media post.', 'success');
+            } catch (error) {
+                console.error('Error downloading image:', error);
+                showNotification('Failed to download image', 'error');
+            }
+        }
+
+        // Edit post functionality
+        document.addEventListener('click', function(e) {
+            if (e.target.closest('.edit-post-btn')) {
+                const button = e.target.closest('.edit-post-btn');
+                const postId = button.getAttribute('data-post-id');
+                const post = allPosts.find(p => p._id === postId);
+                
+                if (post) {
+                    // Populate modal with post data
+                    document.getElementById('editPostId').value = postId;
+                    document.getElementById('editHotelName').value = post.hotelName;
+                    document.getElementById('editEvent').value = post.event;
+                    document.getElementById('editPostText').value = post.postText;
+                    
+                    // Show modal
+                    document.getElementById('editModal').classList.remove('hidden');
+                }
+            }
+        });
+
+        // Close modal functionality
+        document.getElementById('closeEditModal').addEventListener('click', closeEditModal);
+        document.getElementById('cancelEdit').addEventListener('click', closeEditModal);
+        
+        // Close modal when clicking outside
+        document.getElementById('editModal').addEventListener('click', function(e) {
+            if (e.target === this) {
+                closeEditModal();
+            }
+        });
+
+        function closeEditModal() {
+            document.getElementById('editModal').classList.add('hidden');
+        }
+
+        // Handle edit form submission
+        document.getElementById('editForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            const postId = document.getElementById('editPostId').value;
+            const hotelName = document.getElementById('editHotelName').value;
+            const event = document.getElementById('editEvent').value;
+            const postText = document.getElementById('editPostText').value;
+            
+            console.log('Edit form submitted:', { postId, hotelName, event, postText });
+            
+            if (!hotelName || !event || !postText.trim()) {
+                alert('Please fill in all fields');
+                return;
+            }
+            
+            try {
+                const requestBody = JSON.stringify({
+                    hotelName,
+                    event,
+                    postText
+                });
+                
+                console.log('Sending PUT request to:', `/posts/update/${postId}`);
+                console.log('Request body:', requestBody);
+                
+                const response = await fetch(`/posts/update/${postId}`, {
+                    method: 'PUT',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: requestBody
+                });
+                
+                console.log('Response status:', response.status);
+                console.log('Response ok:', response.ok);
+                
+                if (response.ok) {
+                    const responseData = await response.json();
+                    console.log('Response data:', responseData);
+                    
+                    // Update local data
+                    const postIndex = allPosts.findIndex(p => p._id === postId);
+                    if (postIndex !== -1) {
+                        allPosts[postIndex].hotelName = hotelName;
+                        allPosts[postIndex].event = event;
+                        allPosts[postIndex].postText = postText;
+                        
+                        // Update filtered posts if needed
+                        const filteredIndex = filteredPosts.findIndex(p => p._id === postId);
+                        if (filteredIndex !== -1) {
+                            filteredPosts[filteredIndex].hotelName = hotelName;
+                            filteredPosts[filteredIndex].event = event;
+                            filteredPosts[filteredIndex].postText = postText;
+                        }
+                    }
+                    
+                    // Update UI
+                    updateFilters();
+                    renderPosts();
+                    
+                    // Close modal
+                    closeEditModal();
+                    
+                    // Show success message
+                    showNotification('Post updated successfully!', 'success');
+                } else {
+                    const errorData = await response.json();
+                    console.error('Error response:', errorData);
+                    alert('Error updating post: ' + (errorData.error || 'Unknown error'));
+                }
+            } catch (error) {
+                console.error('Error updating post:', error);
+                alert('Failed to update post. Please try again.');
+            }
+        });
+
+        // Notification function
+        function showNotification(message, type = 'info') {
+            const notification = document.createElement('div');
+            notification.className = `fixed top-4 right-4 px-6 py-3 rounded-lg text-white z-50 ${
+                type === 'success' ? 'bg-green-500' : 'bg-blue-500'
+            }`;
+            notification.textContent = message;
+            
+            document.body.appendChild(notification);
+            
+            setTimeout(() => {
+                notification.remove();
+            }, 3000);
+        }
+
+        // Delete post functionality
+        document.addEventListener('click', function(e) {
+            if (e.target.closest('.delete-post-btn')) {
+                const button = e.target.closest('.delete-post-btn');
+                const postId = button.getAttribute('data-post-id');
+                
+                if (confirm('Are you sure you want to delete this post? This action cannot be undone.')) {
+                    deletePost(postId, button);
+                }
+            }
+        });
+
+        // Delete post from database
+        async function deletePost(postId, button) {
+            try {
+                const response = await fetch(`/posts/${postId}`, {
+                    method: 'DELETE'
+                });
+                
+                if (response.ok) {
+                    // Reload posts from server to get updated totalPostsGenerated count
+                    await loadPosts();
+                } else {
+                    const data = await response.json();
+                    alert('Error deleting post: ' + data.error);
+                }
+            } catch (error) {
+                console.error('Error deleting post:', error);
+                alert('Failed to delete post. Please try again.');
+            }
+        }
+    </script>
+</body>
+</html> 

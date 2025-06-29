@@ -1,0 +1,316 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Post Generator Dashboard</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        primary: '#3B82F6',
+                        secondary: '#1E40AF',
+                        accent: '#F59E0B'
+                    }
+                }
+            }
+        }
+    </script>
+</head>
+<body class="bg-gray-50">
+    <!-- Include the reusable navbar component -->
+    <%- include('partials/navbar') %>
+
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <!-- Dashboard Header -->
+        <div class="mb-8">
+            <h2 class="text-3xl font-bold text-gray-800 mb-2">Welcome back, <%= user.name %>!</h2>
+            <p class="text-gray-600">Here's your AI Post Generator dashboard</p>
+        </div>
+
+        <!-- Stats Cards -->
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+            <div class="bg-white rounded-lg shadow-md p-6 border-l-4 border-blue-500">
+                <div class="flex items-center">
+                    <div class="p-3 rounded-full bg-blue-100 text-blue-600">
+                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+                        </svg>
+                    </div>
+                    <div class="ml-4">
+                        <p class="text-sm font-medium text-gray-600">Posts Generated</p>
+                        <p class="text-2xl font-semibold text-gray-900">24</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="bg-white rounded-lg shadow-md p-6 border-l-4 border-green-500">
+                <div class="flex items-center">
+                    <div class="p-3 rounded-full bg-green-100 text-green-600">
+                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
+                        </svg>
+                    </div>
+                    <div class="ml-4">
+                        <p class="text-sm font-medium text-gray-600">Images Created</p>
+                        <p class="text-2xl font-semibold text-gray-900">18</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="bg-white rounded-lg shadow-md p-6 border-l-4 border-purple-500">
+                <div class="flex items-center">
+                    <div class="p-3 rounded-full bg-purple-100 text-purple-600">
+                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"></path>
+                        </svg>
+                    </div>
+                    <div class="ml-4">
+                        <p class="text-sm font-medium text-gray-600">This Month</p>
+                        <p class="text-2xl font-semibold text-gray-900">12</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="bg-white rounded-lg shadow-md p-6 border-l-4 border-yellow-500">
+                <div class="flex items-center">
+                    <div class="p-3 rounded-full bg-yellow-100 text-yellow-600">
+                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                        </svg>
+                    </div>
+                    <div class="ml-4">
+                        <p class="text-sm font-medium text-gray-600">Avg. Time</p>
+                        <p class="text-2xl font-semibold text-gray-900">2.3s</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Quick Actions -->
+        <div class="bg-white rounded-lg shadow-md p-6 mb-8">
+            <h3 class="text-lg font-semibold text-gray-800 mb-4">Quick Actions</h3>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <a href="/create-post" class="flex items-center p-4 border border-gray-200 rounded-lg hover:bg-gray-50 transition duration-200">
+                    <div class="p-2 bg-blue-100 rounded-lg mr-3">
+                        <svg class="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
+                        </svg>
+                    </div>
+                    <div>
+                        <p class="font-medium text-gray-900">Create New Post</p>
+                        <p class="text-sm text-gray-600">Generate AI content</p>
+                    </div>
+                </a>
+
+                <a href="/my-posts" class="flex items-center p-4 border border-gray-200 rounded-lg hover:bg-gray-50 transition duration-200">
+                    <div class="p-2 bg-green-100 rounded-lg mr-3">
+                        <svg class="w-6 h-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+                        </svg>
+                    </div>
+                    <div>
+                        <p class="font-medium text-gray-900">My Posts</p>
+                        <p class="text-sm text-gray-600">View all your posts</p>
+                    </div>
+                </a>
+            </div>
+        </div>
+
+        <!-- Recent Activity -->
+        <div class="bg-white rounded-lg shadow-md p-6">
+            <h3 class="text-lg font-semibold text-gray-800 mb-4">Recent Activity</h3>
+            <div id="recentActivityContainer" class="space-y-4">
+                <!-- Loading state -->
+                <div id="activityLoading" class="text-center py-8">
+                    <div class="inline-block animate-spin rounded-full h-6 w-6 border-b-2 border-primary"></div>
+                    <p class="mt-2 text-gray-600">Loading recent activity...</p>
+                </div>
+                
+                <!-- Activity items will be dynamically inserted here -->
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Load user stats on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            loadUserStats();
+            loadRecentActivity();
+        });
+
+        // Load user statistics from database
+        async function loadUserStats() {
+            try {
+                console.log('Loading user stats...');
+                const response = await fetch('/posts/my-posts');
+                const data = await response.json();
+                
+                console.log('Response:', response.status, data);
+                
+                if (response.ok && data.posts) {
+                    const posts = data.posts;
+                    // Use totalPostsGenerated and monthlyPostsGenerated from API
+                    const totalPostsGenerated = data.totalPostsGenerated || 0;
+                    const monthlyPostsGenerated = data.monthlyPostsGenerated || 0;
+                    console.log('Found posts:', posts.length);
+                    console.log('Total posts generated:', totalPostsGenerated);
+                    console.log('Monthly posts generated:', monthlyPostsGenerated);
+                    
+                    // Update stats cards - using more specific selectors
+                    const statsCards = document.querySelectorAll('.grid.grid-cols-1.md\\:grid-cols-2.lg\\:grid-cols-4 .text-2xl');
+                    console.log('Found stats cards:', statsCards.length);
+                    
+                    if (statsCards.length >= 4) {
+                        // Posts Generated (first card) - use total count that doesn't decrease
+                        statsCards[0].textContent = totalPostsGenerated;
+                        
+                        // Images Created (second card) - same as total posts since each post has an image
+                        statsCards[1].textContent = totalPostsGenerated;
+                        
+                        // This Month (third card) - use monthly count that doesn't decrease
+                        statsCards[2].textContent = monthlyPostsGenerated;
+                        
+                        // Average time (fourth card) - placeholder
+                        statsCards[3].textContent = '2.3s';
+                        
+                        console.log('Stats updated successfully');
+                    } else {
+                        console.error('Not enough stats cards found');
+                    }
+                } else {
+                    console.error('Failed to load posts:', data.error);
+                }
+            } catch (error) {
+                console.error('Error loading user stats:', error);
+            }
+        }
+
+        // Load recent activity from database
+        async function loadRecentActivity() {
+            try {
+                console.log('Loading recent activity...');
+                const response = await fetch('/posts/my-posts');
+                const data = await response.json();
+                
+                console.log('Activity response:', response.status, data);
+                
+                if (response.ok && data.posts) {
+                    // Group posts by hotel and event to show unique activities
+                    const uniqueActivities = [];
+                    const seen = new Set();
+                    
+                    data.posts.forEach(post => {
+                        const key = `${post.hotelName}-${post.event}`;
+                        if (!seen.has(key)) {
+                            seen.add(key);
+                            uniqueActivities.push(post);
+                        }
+                    });
+                    
+                    const posts = uniqueActivities.slice(0, 6); // Get latest 6 unique activities
+                    const activityContainer = document.getElementById('recentActivityContainer');
+                    const loadingElement = document.getElementById('activityLoading');
+                    
+                    console.log('Found unique activities:', posts.length);
+                    
+                    // Hide loading state
+                    if (loadingElement) {
+                        loadingElement.style.display = 'none';
+                    }
+                    
+                    if (posts.length > 0) {
+                        const activityHTML = posts.map((post, index) => {
+                            // Different colors for variety
+                            const colors = ['bg-green-500', 'bg-blue-500', 'bg-purple-500', 'bg-yellow-500', 'bg-pink-500', 'bg-indigo-500'];
+                            const color = colors[index % colors.length];
+                            
+                            return `
+                                <div class="flex items-center p-3 bg-gray-50 rounded-lg">
+                                    <div class="w-2 h-2 ${color} rounded-full mr-3"></div>
+                                    <div class="flex-1">
+                                        <p class="text-sm font-medium text-gray-900">${post.event} post generated for ${post.hotelName}</p>
+                                        <p class="text-xs text-gray-600">${formatTimeAgo(post.createdAt)}</p>
+                                    </div>
+                                    <span class="text-xs bg-green-100 text-green-800 px-2 py-1 rounded-full">Completed</span>
+                                </div>
+                            `;
+                        }).join('');
+                        
+                        activityContainer.innerHTML = activityHTML;
+                        console.log('Recent activity updated successfully');
+                    } else {
+                        activityContainer.innerHTML = `
+                            <div class="text-center py-8 text-gray-500">
+                                <svg class="mx-auto h-12 w-12 text-gray-400 mb-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+                                </svg>
+                                <p>No posts generated yet</p>
+                                <p class="text-sm">Create your first post to see activity here</p>
+                                <div class="mt-4">
+                                    <a href="/create-post" class="inline-flex items-center px-4 py-2 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-primary hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary">
+                                        Create New Post
+                                    </a>
+                                </div>
+                            </div>
+                        `;
+                        console.log('No posts found, showing empty state');
+                    }
+                } else {
+                    console.error('Failed to load recent activity:', data.error);
+                    const activityContainer = document.getElementById('recentActivityContainer');
+                    const loadingElement = document.getElementById('activityLoading');
+                    
+                    if (loadingElement) {
+                        loadingElement.style.display = 'none';
+                    }
+                    
+                    activityContainer.innerHTML = `
+                        <div class="text-center py-8 text-red-500">
+                            <p>Failed to load recent activity</p>
+                            <p class="text-sm">Please try refreshing the page</p>
+                        </div>
+                    `;
+                }
+            } catch (error) {
+                console.error('Error loading recent activity:', error);
+                const activityContainer = document.getElementById('recentActivityContainer');
+                const loadingElement = document.getElementById('activityLoading');
+                
+                if (loadingElement) {
+                    loadingElement.style.display = 'none';
+                }
+                
+                activityContainer.innerHTML = `
+                    <div class="text-center py-8 text-red-500">
+                        <p>Error loading recent activity</p>
+                        <p class="text-sm">Please try refreshing the page</p>
+    </div>
+                `;
+            }
+        }
+
+        // Format time ago
+        function formatTimeAgo(dateString) {
+            const date = new Date(dateString);
+            const now = new Date();
+            const diffInSeconds = Math.floor((now - date) / 1000);
+            
+            if (diffInSeconds < 60) {
+                return 'Just now';
+            } else if (diffInSeconds < 3600) {
+                const minutes = Math.floor(diffInSeconds / 60);
+                return `${minutes} minute${minutes > 1 ? 's' : ''} ago`;
+            } else if (diffInSeconds < 86400) {
+                const hours = Math.floor(diffInSeconds / 3600);
+                return `${hours} hour${hours > 1 ? 's' : ''} ago`;
+            } else {
+                const days = Math.floor(diffInSeconds / 86400);
+                return `${days} day${days > 1 ? 's' : ''} ago`;
+            }
+        }
+    </script>
+</body>
+</html>
