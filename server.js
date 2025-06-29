@@ -34,6 +34,8 @@ app.use(session({
 app.use(passport.initialize());
 app.use(passport.session());
 
+app.set('trust proxy', true);
+
 // Database connection
 mongoose.connect(process.env.MONGO_URI, {
     serverSelectionTimeoutMS: 5000, // Timeout after 5s instead of 30s
