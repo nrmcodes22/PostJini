@@ -6,6 +6,7 @@ const path=require('path');
 const session=require('express-session');
 const postRoutes = require('./routes/posts');
 require('./routes/auth');
+const favicon = require('serve-favicon');
 const app=express();
 
 // Set up view engine
@@ -151,6 +152,8 @@ app.use((req, res) => {
         user: req.user 
     });
 });
+
+app.use(favicon(path.join(__dirname, 'public', 'favicon.ico')));
 
 const port=process.env.PORT || 5000;
 app.listen(port,()=>{
