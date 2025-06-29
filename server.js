@@ -57,6 +57,15 @@ app.get('/profile',(req,res)=>{
     res.render('profile', { user: req.user });
 });
 
+// About and Pricing routes (accessible to all users)
+app.get('/about',(req,res)=>{
+    res.render('about', { user: req.user });
+});
+
+app.get('/pricing',(req,res)=>{
+    res.render('pricing', { user: req.user });
+});
+
 app.get('/',(req,res)=>{
     res.render('index', { text: null, imageUrl: null, user: req.user });
     
