@@ -25,18 +25,47 @@ app.use(session({
   resave: false,
   saveUninitialized: false,
   cookie: {
-    maxAge: 24 * 60 * 60 * 1000 // 1 day
+    maxAge: 24 * 60 * 60 * 1000, // 1 day
+    secure: process.env.NODE_ENV === 'production', // Use secure cookies in production
+    httpOnly: true,
+    sameSite: 'lax'
   }
 }));
 app.use(passport.initialize());
 app.use(passport.session());
 
 // Database connection
-mongoose.connect(process.env.MONGO_URI).then(()=>{
-    console.log("MongoDB connected");
+mongoose.connect(process.env.MONGO_URI, {
+    serverSelectionTimeoutMS: 5000, // Timeout after 5s instead of 30s
+    socketTimeoutMS: 45000, // Close sockets after 45s of inactivity
+}).then(()=>{
+    console.log("✅ MongoDB connected successfully");
+    console.log("📊 Database:", mongoose.connection.name);
+    console.log("🌐 Host:", mongoose.connection.host);
 }).catch(err=>{
-    console.error("MongoDB connection",err);
-})
+    console.error("❌ MongoDB connection failed:");
+    console.error("Error type:", err.name);
+    console.error("Error message:", err.message);
+    
+    if (err.name === 'MongoNetworkError') {
+        console.error("🔍 Network Error - Check:");
+        console.error("   - Internet connection");
+        console.error("   - MongoDB Atlas IP whitelist");
+        console.error("   - Firewall settings");
+    } else if (err.name === 'MongoServerSelectionError') {
+        console.error("🔍 Server Selection Error - Check:");
+        console.error("   - MongoDB URI format");
+        console.error("   - Database credentials");
+        console.error("   - Cluster status");
+    } else if (err.name === 'MongoParseError') {
+        console.error("🔍 Parse Error - Check:");
+        console.error("   - MongoDB URI syntax");
+        console.error("   - Special characters in password");
+    }
+    
+    console.error("🔧 Full error details:", err);
+    process.exit(1); // Exit if database connection fails
+});
 
 // Individual routes (must come before /posts routes to avoid conflicts)
 app.get('/my-posts',(req,res)=>{
